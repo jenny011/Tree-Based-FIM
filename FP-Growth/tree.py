@@ -74,19 +74,37 @@ class FPTree(Tree):
         node._count += count
         return node._count
 
-    def insert(self, ptr, line, count):
+    def insert_loop(self, ptr, line, count):
         for item in line:
             if item in self.children(ptr):
-                self._update(ptr._children[item], 1)
+                self._update(ptr._children[item], count)
                 ptr = ptr._children[item]
             else:
-                self._size += count
+                self._size += 1
                 newNode = TreeNode(item, ptr)
                 self._update(newNode, count)
                 prevHeader = self.find_last(item)
                 prevHeader._next = newNode
                 ptr._children[item] = newNode
                 ptr = newNode
+
+    def insert(self, ptr, line, count):
+        if not line:
+            return
+        item = line[0]
+        if item in self.children(ptr):
+            self._update(ptr._children[item], count)
+            ptr = ptr._children[item]
+            self.insert(ptr, line[1:], count)
+        else:
+            self._size += 1
+            newNode = TreeNode(item, ptr)
+            self._update(newNode, count)
+            prevHeader = self.find_last(item)
+            prevHeader._next = newNode
+            ptr._children[item] = newNode
+            ptr = newNode
+            self.insert(ptr, line[1:], count)
 
     #-------------------------- public methods --------------------------
     def createHeaderTable(self,dbItems, minsup):

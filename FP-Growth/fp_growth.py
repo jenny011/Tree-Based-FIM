@@ -3,7 +3,7 @@ import header as myHeader
 import tree as myTree
 
 #-------define global vars------
-minsup = 3180
+minsup = 1500
 
 #----------scan db-----------
 def scanDB(path, seperation):
@@ -30,7 +30,7 @@ def buildFPTree(db):
 	# print("db items:", dbItems)
 	fpTree.createHeaderTable(dbItems, minsup)
 	# print("header table count sum:", sum(fpTree.headerTable.counts()))
-	print("header table:", fpTree.headerTable)
+	# print("header table:", fpTree.headerTable)
 	for trx in db:
 		fpTree.add(trx, 1)
 	return fpTree
