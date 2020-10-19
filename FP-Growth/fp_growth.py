@@ -5,7 +5,7 @@ import tree as myTree
 #-------define global vars------
 minsup = 1500
 
-#----------scan db-----------
+#----------scan the db-----------
 def scanDB(path, seperation):
 	db = []
 	f = open(path, 'r')
@@ -15,7 +15,7 @@ def scanDB(path, seperation):
 	f.close()
 	return db
 
-#-------get db items-----
+#-----------get item counts for a dataset---------
 def getDBItems(db):
 	dbItems = {}
 	for trx in db:
@@ -23,7 +23,7 @@ def getDBItems(db):
 			dbItems[item] = dbItems.get(item, 0) + 1
 	return dbItems
 
-#-------fp-tree-------
+#-----------build an fp-tree-----------
 def buildFPTree(db):
 	fpTree = myTree.FPTree()
 	dbItems = getDBItems(db)
@@ -35,7 +35,7 @@ def buildFPTree(db):
 		fpTree.add(trx, 1)
 	return fpTree
 
-#-------fp-growth-------
+#-----------get item counts for a pattern base-----------
 def getPBItems(pb):
 	pbItems = {}
 	for ptn in pb:
@@ -43,6 +43,7 @@ def getPBItems(pb):
 			pbItems[item] = pbItems.get(item, 0) + ptn[0]
 	return pbItems
 
+#-----------build a conditional fp-tree-----------
 def buildCondTree(condPB):
 	condTree = myTree.FPTree()
 	pbItems = getPBItems(condPB)
@@ -52,6 +53,7 @@ def buildCondTree(condPB):
 		condTree.add(ptn[1], ptn[0])
 	return condTree
 
+#-----------mine an fp-tree for a pattern-----------
 def mine(tree, header, basePtn):
 	basePtn += header._key + ' '
 	patterns = [basePtn]
@@ -68,6 +70,7 @@ def mine(tree, header, basePtn):
 		patterns += mineAll(condTree, basePtn)
 	return patterns
 
+#-----------mine an fp-tree-----------
 def mineAll(tree, basePtn):
 	allPatterns = []
 	for header in tree.headerTable.headers():
@@ -79,12 +82,11 @@ def main():
 	db = scanDB('../datasets/chess.dat', ' ')
 	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
 	fpTree = buildFPTree(db)
+	print(mineAll(fpTree, ''))
 	# print("fpTree size:", fpTree.size())
 	# print("fpTree count sums:", sum(fpTree.counts()))
 	# print(fpTree)
 	# print('LL: ', fpTree.repr_ll('29'))
-	print(mineAll(fpTree, ''))
-
 
 if __name__ == '__main__':
 	main()

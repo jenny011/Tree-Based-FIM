@@ -1,7 +1,7 @@
 '''FP-Growth'''
 
 #-------define global vars------
-minsup = 2
+minsup = 2000
 
 #----------scan db-----------
 def scanDB(path, seperation):

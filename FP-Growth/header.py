@@ -13,22 +13,17 @@ class Header():
     def __repr__(self):
       return '({0}: {1})'.format(self._key, self._count)
 
-class HeaderTable(): # maxHeap
+class HeaderTable():
     def __init__(self):
         self._table = []
 
     def __len__(self):
         return len(self._table)
 
+    # Iterators
     def __iter__(self):
         for header in self._table:  
             yield (header._key, header._count)
-
-    def __repr__(self):
-        r = ''
-        for i in self:
-            r += str(i) + ' '
-        return r
 
     def headers(self):
         for header in self._table:
@@ -45,7 +40,14 @@ class HeaderTable(): # maxHeap
     def insert(self, key, count):
         self._table.append(Header(key, count))
 
+    # Find the header with the key as the first node in the linked list
     def find_first(self, key):
         for header in self.headers():
             if header._key == key:
                 return header
+
+    def __repr__(self):
+        r = ''
+        for i in self:
+            r += str(i) + ' '
+        return r
