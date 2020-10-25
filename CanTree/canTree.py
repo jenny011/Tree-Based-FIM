@@ -1,6 +1,7 @@
 '''FP-Growth'''
 import tree as myTree
 from FP_Growth import fpGrowth
+from time import time
 
 #-------define global vars------
 minsup = 15590
@@ -67,10 +68,19 @@ def mineAll(tree, basePtn, dbItems):
 def main():
 	db = scanDB('../datasets/retail.dat', ' ')
 	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
+	start = time()
 	dbItems = getDBItems(db)
+	end = time()
+	print("get db items:", end - start)
 	# print(dbItems)
+	start = time()
 	canTree = buildCanTree(db, dbItems)
+	end = time()
+	print("build CANTree:", end - start)
+	start = time()
 	print(mineAll(canTree, '', dbItems))
+	end = time()
+	print("mine CANTree:", end - start)
 	# print("fpTree size:", fpTree.size())
 	# print("fpTree count sums:", sum(fpTree.counts()))
 	# print(canTree)
