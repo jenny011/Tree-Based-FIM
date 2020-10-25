@@ -3,7 +3,7 @@ import header as myHeader
 import tree as myTree
 
 #-------define global vars------
-minsup = 1500
+minsup = 3180
 
 #----------scan the db-----------
 def scanDB(path, seperation):
