@@ -3,7 +3,7 @@ import header as myHeader
 import tree as myTree
 
 #-------define global vars------
-minsup = 3180
+minsup = 15590
 
 #----------scan the db-----------
 def scanDB(path, seperation):
@@ -30,7 +30,7 @@ def buildFPTree(db):
 	# print("db items:", dbItems)
 	fpTree.createHeaderTable(dbItems, minsup)
 	# print("header table count sum:", sum(fpTree.headerTable.counts()))
-	# print("header table:", fpTree.headerTable)
+	print("header table:", fpTree.headerTable)
 	for trx in db:
 		fpTree.add(trx, 1)
 	return fpTree
@@ -79,7 +79,7 @@ def mineAll(tree, basePtn):
 
 
 def main():
-	db = scanDB('../datasets/chess.dat', ' ')
+	db = scanDB('../datasets/retail.dat', ' ')
 	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
 	fpTree = buildFPTree(db)
 	print(mineAll(fpTree, ''))

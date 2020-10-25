@@ -44,17 +44,3 @@ def mineAll(tree, basePtn, minsup):
 		allPatterns += mine(tree, header, basePtn, minsup)
 	return allPatterns
 
-
-def main():
-	db = scanDB('../../datasets/chess.dat', ' ')
-	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
-	fpTree = buildFPTree(db)
-	print(mineAll(fpTree, ''))
-	# print("fpTree size:", fpTree.size())
-	# print("fpTree count sums:", sum(fpTree.counts()))
-	# print(fpTree)
-	# print('LL: ', fpTree.repr_ll('29'))
-
-if __name__ == '__main__':
-	main()
-

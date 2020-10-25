@@ -1,7 +1,7 @@
 '''FP-Growth'''
 
 #-------define global vars------
-minsup = 2000
+minsup = 15590
 
 #----------scan db-----------
 def scanDB(path, seperation):
@@ -22,7 +22,7 @@ def getDBItems(db):
 	return dbItems
 
 def main():
-	db = scanDB('../datasets/chess.dat', ' ')
+	db = scanDB('../datasets/retail.dat', ' ')
 	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
 	dbItems = getDBItems(db)
 	freq = []

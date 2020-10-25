@@ -3,7 +3,7 @@ import tree as myTree
 from FP_Growth import fpGrowth
 
 #-------define global vars------
-minsup = 3180
+minsup = 15590
 
 #----------scan the db-----------
 def scanDB(path, seperation):
@@ -38,12 +38,10 @@ def buildCanTree(db, dbItems):
 #-----------mining-----------
 #-----------mining-----------
 #-----------mining-----------
-#-----------mine an CanTree for a pattern-----------
-def mine(tree, key, value, basePtn, support):
-	patterns = []
-	if support >= minsup:
-		basePtn += key + ' '
-		patterns.append(basePtn)
+#-----------mine an CanTree for an item-----------
+def mine(tree, key, value, basePtn):
+	basePtn += key + ' '
+	patterns = [basePtn]
 	ptr = value
 	condPB = []
 	while ptr:
@@ -61,15 +59,16 @@ def mine(tree, key, value, basePtn, support):
 def mineAll(tree, basePtn, dbItems):
 	allPatterns = []
 	for key, value in tree.route.items():
-		allPatterns += mine(tree, key, value, basePtn, dbItems[key])
+		if dbItems[key] >= minsup:
+			allPatterns += mine(tree, key, value, basePtn)
 	return allPatterns
 
 
 def main():
-	db = scanDB('../datasets/chess.dat', ' ')
+	db = scanDB('../datasets/retail.dat', ' ')
 	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
 	dbItems = getDBItems(db)
-	print(dbItems)
+	# print(dbItems)
 	canTree = buildCanTree(db, dbItems)
 	print(mineAll(canTree, '', dbItems))
 	# print("fpTree size:", fpTree.size())
