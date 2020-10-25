@@ -63,6 +63,7 @@ class CanTree(Tree):
     def __init__(self):
         super().__init__()
         self.route = {}
+        self.last_in_route = {}
 
     #-------------------------- nonpublic mutators --------------------------
     def _update(self, node, count):
@@ -88,18 +89,19 @@ class CanTree(Tree):
     def insert(self, ptr, line, count):
         if not line:
             return
-        item = line[0]
-        if item in self.children(ptr):
-            self._update(ptr._children[item], count)
-            ptr = ptr._children[item]
+        key = line[0]
+        if key in self.children(ptr):
+            self._update(ptr._children[key], count)
+            ptr = ptr._children[key]
             self.insert(ptr, line[1:], count)
         else:
             self._size += 1
-            newNode = TreeNode(item, ptr)
+            newNode = TreeNode(key, ptr)
             self._update(newNode, count)
-            prevHeader = self.find_last(item)
+            prevHeader = self.find_last(key)
             prevHeader._next = newNode
-            ptr._children[item] = newNode
+            self.update_last(key, newNode)
+            ptr._children[key] = newNode
             ptr = newNode
             self.insert(ptr, line[1:], count)
 
@@ -109,6 +111,7 @@ class CanTree(Tree):
         temp = sorted(dbItems.items(), key=lambda x: x[0])
         for item in temp:
             self.route[item[0]] = TreeNode()
+            self.last_in_route[item[0]] = self.route[item[0]]
 
     # find the first node in the linked list from the route
     def find_first(self, key):
@@ -116,10 +119,10 @@ class CanTree(Tree):
 
     # find the last node in the linked list from the route
     def find_last(self, key):
-        ptr = self.find_first(key)
-        while ptr._next:
-            ptr = ptr._next
-        return ptr
+        return self.last_in_route[key]
+
+    def update_last(self, key, node):
+        self.last_in_route[key] = node
 
     # Add one transaction or conditional pattern base
     def add(self, line, count):

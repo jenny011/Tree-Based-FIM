@@ -38,7 +38,9 @@ class HeaderTable():
             yield header._count
 
     def insert(self, key, count):
-        self._table.append(Header(key, count))
+        header = Header(key, count)
+        self._table.append(header)
+        return header
 
     # Find the header with the key as the first node in the linked list
     def find_first(self, key):

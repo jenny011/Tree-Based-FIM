@@ -65,6 +65,7 @@ class FPTree(Tree):
     def __init__(self):
         super().__init__()
         self.headerTable = myHeader.HeaderTable()
+        self.last_in_route = {}
 
     #-------------------------- nonpublic mutators --------------------------
     def _update(self, node, count):
@@ -80,7 +81,7 @@ class FPTree(Tree):
                 self._size += 1
                 newNode = TreeNode(item, ptr)
                 self._update(newNode, count)
-                prevHeader = self.find_last(item)
+                prevHeader = self.get_last(item)
                 prevHeader._next = newNode
                 ptr._children[item] = newNode
                 ptr = newNode
@@ -88,18 +89,19 @@ class FPTree(Tree):
     def insert(self, ptr, line, count):
         if not line:
             return
-        item = line[0]
-        if item in self.children(ptr):
-            self._update(ptr._children[item], count)
-            ptr = ptr._children[item]
+        key = line[0]
+        if key in self.children(ptr):
+            self._update(ptr._children[key], count)
+            ptr = ptr._children[key]
             self.insert(ptr, line[1:], count)
         else:
             self._size += 1
-            newNode = TreeNode(item, ptr)
+            newNode = TreeNode(key, ptr)
             self._update(newNode, count)
-            prevHeader = self.find_last(item)
+            prevHeader = self.get_last(key)
             prevHeader._next = newNode
-            ptr._children[item] = newNode
+            self.update_last(key, newNode)
+            ptr._children[key] = newNode
             ptr = newNode
             self.insert(ptr, line[1:], count)
 
@@ -111,14 +113,15 @@ class FPTree(Tree):
                 unsorted[key] = count
         temp = sorted(unsorted.items(), key=lambda x: x[1], reverse=True)
         for item in temp:
-            self.headerTable.insert(item[0], item[1])
+            header = self.headerTable.insert(item[0], item[1])
+            self.last_in_route[item[0]] = header
 
-    # find the last node in the linked list from the headerTable
-    def find_last(self, key):
-        ptr = self.headerTable.find_first(key)
-        while ptr._next:
-            ptr = ptr._next
-        return ptr
+    # get the last node in the linked list from the headerTable
+    def get_last(self, key):
+        return self.last_in_route[key]
+
+    def update_last(self, key, header):
+        self.last_in_route[key] = header
 
     # Add one transaction or conditional pattern base
     def add(self, line, count):
