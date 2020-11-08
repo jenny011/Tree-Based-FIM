@@ -1,3 +1,5 @@
+from time import time
+
 '''tree'''
 #-------------------------- Tree Base -------------------
 #-------------------------- Tree Base -------------------
@@ -126,7 +128,12 @@ class CanTree(Tree):
 
     # Add one transaction or conditional pattern base
     def add(self, line, count):
+        f = open('insert.txt', 'a')
+        start = time()
         self.insert(self._root, sorted(line), count) 
+        end = time()
+        f.write(str(end - start) + '\n')
+        f.close()
 
     # Get the prefix path which can be readily used added to the conditional pattern base
     def prefix_path(self, node):

@@ -113,7 +113,7 @@ class FPTree(Tree):
                 unsorted[key] = count
         temp = sorted(unsorted.items(), key=lambda x: x[1], reverse=True)
         for item in temp:
-            header = self.headerTable.insert(item[0], item[1])
+            header = self.headerTable.insert(item[0])
             self.last_in_route[item[0]] = header
 
     # get the last node in the linked list from the headerTable

@@ -25,15 +25,14 @@ def getDBItems(db):
 	return dbItems
 
 #-----------build an fp-tree-----------
-def buildFPTree(db):
+def buildFPTree(db, dbItems):
 	fpTree = myTree.FPTree()
-	dbItems = getDBItems(db)
 	# print("db items:", dbItems)
 	fpTree.createHeaderTable(dbItems, minsup)
 	# print("header table count sum:", sum(fpTree.headerTable.counts()))
 	print("header table:", fpTree.headerTable)
 	for trx in db:
-		fpTree.add(trx, 1)
+		fpTree.add(trx, 1, True)
 	return fpTree
 
 #-----------get item counts for a pattern base-----------
@@ -51,7 +50,7 @@ def buildCondTree(condPB):
 	condTree.createHeaderTable(pbItems, minsup)
 	# print("header table:", condTree.headerTable)
 	for ptn in condPB:
-		condTree.add(ptn[1], ptn[0])
+		condTree.add(ptn[1], ptn[0], False)
 	return condTree
 
 #-----------mine an fp-tree for a pattern-----------
@@ -83,7 +82,11 @@ def main():
 	db = scanDB('../datasets/retail.dat', ' ')
 	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
 	start = time()
-	fpTree = buildFPTree(db)
+	dbItems = getDBItems(db)
+	end = time()
+	print("get db items:", end - start)
+	start = time()
+	fpTree = buildFPTree(db, dbItems)
 	end = time()
 	print("build FP-Tree:", end - start)
 	start = time()

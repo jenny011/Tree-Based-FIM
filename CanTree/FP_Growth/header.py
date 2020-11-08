@@ -1,17 +1,18 @@
 '''header table'''
 class Header():
-    __slots__ = '_key', '_count', '_next'
+    __slots__ = '_key', '_next'
 
-    def __init__(self, key, count, link = None):
+    def __init__(self, key, link = None):
       self._key = key
-      self._count = count
+      # self._count = count
       self._next = link
 
-    def __gt__(self, other):
-      return self._count > other._count 
+    # def __gt__(self, other):
+    #   return self._count > other._count 
 
     def __repr__(self):
-      return '({0}: {1})'.format(self._key, self._count)
+      # return '({0}: {1})'.format(self._key, self._count)
+      return str(self._key)
 
 class HeaderTable():
     def __init__(self):
@@ -23,7 +24,7 @@ class HeaderTable():
     # Iterators
     def __iter__(self):
         for header in self._table:  
-            yield (header._key, header._count)
+            yield header._key
 
     def headers(self):
         for header in self._table:
@@ -33,12 +34,12 @@ class HeaderTable():
         for header in self.headers():  
             yield header._key
 
-    def counts(self):
-        for header in self.headers():  
-            yield header._count
+    # def counts(self):
+    #     for header in self.headers():  
+    #         yield header._count
 
-    def insert(self, key, count):
-        header = Header(key, count)
+    def insert(self, key):
+        header = Header(key)
         self._table.append(header)
         return header
 

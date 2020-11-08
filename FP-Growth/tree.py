@@ -1,5 +1,6 @@
 '''tree'''
 import header as myHeader
+from time import time
 
 #-------------------------- Tree Base -------------------
 #-------------------------- Tree Base -------------------
@@ -113,7 +114,7 @@ class FPTree(Tree):
                 unsorted[key] = count
         temp = sorted(unsorted.items(), key=lambda x: x[1], reverse=True)
         for item in temp:
-            header = self.headerTable.insert(item[0], item[1])
+            header = self.headerTable.insert(item[0])
             self.last_in_route[item[0]] = header
 
     # get the last node in the linked list from the headerTable
@@ -124,12 +125,19 @@ class FPTree(Tree):
         self.last_in_route[key] = header
 
     # Add one transaction or conditional pattern base
-    def add(self, line, count):
+    def add(self, line, count, record):
+        if record:
+            f = open('insert.txt', 'a')
+            start = time()
         sortedLine = []
         for key in self.headerTable.keys():
             if key in line:
                 sortedLine.append(key)
         self.insert(self._root, sortedLine, count) 
+        if record:
+            end = time()
+            f.write(str(end - start) + '\n')
+            f.close()
 
     # Get the prefix path which can be readily used added to the conditional pattern base
     def prefix_path(self, node):
