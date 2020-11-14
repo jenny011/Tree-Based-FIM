@@ -7,3 +7,6 @@ Remove _count_ for _headerTable_ after debugging.
 ## CanTree
 Use FP-Growth for mining.
 Clean up.
+
+## Freno
+Implement transfer

@@ -11,8 +11,8 @@ class TreeNode():
         self._parent = parent
         self._count = count
         self._children = {}
-        self._patterns = {}
-        self._items = {}
+        self._comb_table = {}
+        self._item_table = {}
 
     def addChild(self, node):
         self._children[node._key] = node
@@ -69,43 +69,64 @@ class Tree():
                 ret += '{' + item._key + '}, '
         return ret 
 
-    def _insert(self, parent, value, count=0):
+    def _insertNode(self, parent, value, count=0):
         newNode = TreeNode(value, parent, count)
         parent.addChild(newNode)
         self._size += 1
         return newNode
 
-    def insertCombination(self, node, comb):
-        # print("+", node._key, node._count,node._items)
-        # if root pass down to first level
-        if node == self._root:
-            if comb[0] not in node._children:
-                newNode = self._insert(node, comb[0])
-            return self.insertCombination(node._children[comb[0]], comb[1:])
-        # if not root record access
+    def _recordAccess(self, node):
         node._count += 1
-        # last item in the combination
+
+    def _recordInfo(self, node, comb, count=1):
+        # record pattern
+        pattern = (",").join(comb)
+        node._comb_table[pattern] = node._comb_table.get(pattern, 0) + count
+        # record item
+        for item in comb:
+            node._item_table[item] = node._item_table.get(item, 0) + count
+        for item in comb:
+            # item just became frequent
+            if node._item_table[item] >= minsup and (node._key + "," + item) not in node._children:
+                # add node
+                newNode = self._insertNode(node, node._key + "," + item, node._item_table[item])
+                # transfer patterns to newNode
+                for key, value in node._comb_table.items():
+                    recorded_ptns = key.split(",")
+                    if item in recorded_ptns:
+                        i = recorded_ptns.index(item)
+                        if i < len(key):
+                            suffix = recorded_ptns[recorded_ptns.index(item) + 1:]
+                            self._recordInfo(newNode, suffix, node._comb_table[key])
+
+    def insertAndRecord(self, node, comb, count=1):
+        # not root
+        print("+", node._key, node._count,node._item_table)
+        self._recordAccess(node)
+        # reached the end
         if not comb:
             return
-        # the next pattern is frequent
-        if node._key + "," + comb[0] in node._children:
-            return self.insertCombination(node._children[node._key + "," + comb[0]], comb[1:])
-        # the next pattern is not frequent
+        # matches a child
+        if node._key + "," + comb[0] in node._children.keys():
+            self.insertAndRecord(node._children[node._key + "," + comb[0]], comb[1:])
+        # not child match
         else:
-            # record pattern
-            pattern = (",").join(comb)
-            node._patterns[pattern] = node._patterns.get(pattern, 0) + 1
-            # record item
-            for item in comb:
-                node._items[item] = node._items.get(item, 0) + 1
-                # item becomes frequent
-                if node._items[item] >= minsup:
-                    # add node
-                    self._insert(node, node._key + "," + item, node._items[item])
-                    # transfer patters and items
+            self._recordInfo(node, comb, count)
+        print("=",node._key, node._count,node._item_table)
 
-                    
-        # print("=",node._key, node._count,node._items)
+    def insert(self, node, trx):
+        if node == self._root:
+            # at root
+            for i in range(len(trx)):
+                if trx[i] not in node._children.keys():
+                    newNode = self._insertNode(node, trx[i])
+                self.insertAndRecord(node._children[trx[i]], trx[i+1:])
+        else:
+            for i in range(len(trx)):
+                if trx[i] in node._children.keys():
+                    self.insertAndRecord(node._children[trx[i]], trx[i+1:])
+
+    
 
 
 
