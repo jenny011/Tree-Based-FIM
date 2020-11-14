@@ -2,11 +2,11 @@
 CS Independent Studies
 
 ## FP-Growth
+Optimize
 Remove _count_ for _headerTable_ after debugging.
 
 ## CanTree
-Use FP-Growth for mining.
-Clean up.
+Optimize
 
 ## Freno
-Implement transfer
+Test and clean up.
