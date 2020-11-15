@@ -1,7 +1,7 @@
 '''FRENO'''
 from tree import *
 
-minsup = 3
+minsup = 15000
 
 def scanDB(path, seperation):
 	db = []
@@ -14,9 +14,9 @@ def scanDB(path, seperation):
 
 
 if __name__ == '__main__':
-	# db = scanDB('../datasets/retail.dat',' ')
+	db = scanDB('../datasets/retail.dat',' ')
 	# db = [['a', 'b', 'c', 'd'],['a', 'c', 'd'],['a', 'c'], ['b', 'd']]
-	db = [['a', 'b', 'c', 'd', 'e'], ['a', 'b', 'c', 'd'], ['a', 'c', 'e'], ['a', 'b', 'c', 'd']]
+	# db = [['a', 'b', 'c', 'd'], ['a', 'b', 'c', 'd'], ['a', 'c'], ['a', 'b', 'c'], ['a', 'd']]
 	FrenoTree = Tree()
 	for trx in db:
 		trx.sort()
