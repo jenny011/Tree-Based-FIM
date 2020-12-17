@@ -1,5 +1,4 @@
 # from time import time
-from copy import deepcopy
 
 '''tree'''
 #-------------------------- Tree Base -------------------
@@ -11,6 +10,8 @@ class TreeNode():
         self._parent = parent
         self._count = count
         self._children = {}
+        self._freq_combs = set()
+        self._freq_items = set()
         self._comb_table = {}
         self._item_table = {}
 
@@ -23,6 +24,8 @@ class Tree():
         self._root = TreeNode()
         self._size = 0
         self.minsup = minsup
+        self._n = 0
+        self._hit = 0
 
     #-------------------------- public accessors -------------------
     def size(self):
@@ -63,12 +66,24 @@ class Tree():
             for other in self._subtree_preorder(c):
                 yield other
 
-    def __repr__(self):
+    def comb_table_size(self):
+        s = []
+        for item in self:
+            s.append(len(item._comb_table))
+        return s
+
+    def item_table_size(self):
+        s = []
+        for item in self:
+            s.append(len(item._item_table))
+        return s
+
+    def toList(self):
         ret = []
         for item in self:
             if item._count >= self.minsup:
                 ret.append(str(item._key))
-        return str(sorted(ret))
+        return sorted(ret)
 
     def _addNode(self, parent, value, count=0):
         newNode = TreeNode(value, parent, count)
@@ -82,13 +97,19 @@ class Tree():
     def _recordInfo(self, node, comb, count=1, exist=True):
         # record pattern
         combStr = (",").join(comb)
+        # if the combination is already frequent, do nothing
+        if combStr in node._freq_combs:
+            return
         node._comb_table[combStr] = node._comb_table.get(combStr, 0) + count
         # record item
         for item in comb:
-            node._item_table[item] = node._item_table.get(item, 0) + count
+            if item not in node._freq_items:
+                node._item_table[item] = node._item_table.get(item, 0) + count
+        # breadth first
+        # potential optimization?
         for item in comb:
             # item just became frequent
-            if node._item_table[item] >= self.minsup and (node._key + "," + item) not in node._children:
+            if item not in node._freq_items and node._item_table[item] >= self.minsup:
                 # add node
                 newNode = self._addNode(node, node._key + "," + item, node._item_table[item])
                 # transfer patterns to newNode
@@ -99,9 +120,12 @@ class Tree():
                         if i < len(ptn) - 1:
                             suffix = ptn[i + 1:]
                             self._recordInfo(newNode, suffix, node._comb_table[key], exist=False)
-                    # moved the whole combination to the child
+                    # the whole combination becomes frequent
                     if node._comb_table[key] >= self.minsup:
+                        node._freq_combs.add(key)
                         del node._comb_table[key]
+                node._freq_items.add(item)
+                del node._item_table[item]
 
     def insertAndRecord(self, node, comb):
         # not root
@@ -111,7 +135,7 @@ class Tree():
             return
         self._recordInfo(node, comb)
         for i in range(len(comb)):
-            if node._key + "," + comb[i] in node._children.keys():
+            if node._key + "," + comb[i] in node._children:
                 self.insertAndRecord(node._children[node._key + "," + comb[i]], comb[i+1:])
 
     def insert(self, node, trx):

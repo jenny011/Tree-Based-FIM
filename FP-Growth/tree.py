@@ -27,20 +27,20 @@ class Tree():
 
     #iterators
     def __iter__(self):
-        for node in self.preorder():                       
-            yield (node._key, node._count) 
+        for node in self.preorder():
+            yield (node._key, node._count)
 
     def nodes(self):
-        for node in self.preorder():                       
-            yield node    
+        for node in self.preorder():
+            yield node
 
     def keys(self):
-        for node in self.preorder():                       
-            yield node._key   
+        for node in self.preorder():
+            yield node._key
 
     def counts(self):
-        for node in self.preorder():                       
-            yield node._count              
+        for node in self.preorder():
+            yield node._count
 
     def children(self, node):
         for child in node._children.keys():
@@ -48,14 +48,14 @@ class Tree():
 
     def preorder(self):
         if not self.is_empty():
-            for node in self._subtree_preorder(self._root): 
+            for node in self._subtree_preorder(self._root):
                 yield node
 
     def _subtree_preorder(self, node):
-        yield node                                           
-        for c in node._children.values():                       
-            for other in self._subtree_preorder(c):      
-                yield other                  
+        yield node
+        for c in node._children.values():
+            for other in self._subtree_preorder(c):
+                yield other
 
 
 #----------------------------------- Below are FPTree codes -------------------------------
@@ -125,19 +125,19 @@ class FPTree(Tree):
         self.last_in_route[key] = header
 
     # Add one transaction or conditional pattern base
-    def add(self, line, count, record):
-        if record:
-            f = open('insert.txt', 'a')
-            start = time()
+    def add(self, line, count):
+        # if record:
+        #     f = open('fpGrowthExp/retail50_01/insert.txt', 'a')
+        #     start = time()
         sortedLine = []
         for key in self.headerTable.keys():
             if key in line:
                 sortedLine.append(key)
-        self.insert(self._root, sortedLine, count) 
-        if record:
-            end = time()
-            f.write(str(end - start) + '\n')
-            f.close()
+        self.insert(self._root, sortedLine, count)
+        # if record:
+        #     end = time()
+        #     f.write(str(end - start) + '\n')
+        #     f.close()
 
     # Get the prefix path which can be readily used added to the conditional pattern base
     def prefix_path(self, node):
@@ -150,7 +150,7 @@ class FPTree(Tree):
         if not path:
             return None
         path.reverse()
-        return (count, path) 
+        return (count, path)
 
     def __repr__(self):
         r = ''
@@ -172,6 +172,3 @@ class FPTree(Tree):
         # for node in self.iter_ll(key):
         #     r += node._count
         return r
-
-
-

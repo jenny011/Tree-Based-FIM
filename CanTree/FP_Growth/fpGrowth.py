@@ -22,7 +22,7 @@ def buildCondTree(condPB, minsup):
 
 #-----------mine an fp-tree for a pattern-----------
 def mine(tree, header, basePtn, minsup):
-	basePtn += header._key + ' '
+	basePtn += header._key + ','
 	patterns = [basePtn]
 	ptr = header._next
 	condPB = []

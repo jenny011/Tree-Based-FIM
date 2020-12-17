@@ -1,4 +1,7 @@
 from time import time
+import sys
+
+old_limit = sys.getrecursionlimit()
 
 '''tree'''
 #-------------------------- Tree Base -------------------
@@ -26,20 +29,20 @@ class Tree():
 
     #iterators
     def __iter__(self):
-        for node in self.preorder():                       
-            yield (node._key, node._count) 
+        for node in self.preorder():
+            yield (node._key, node._count)
 
     def nodes(self):
-        for node in self.preorder():                       
-            yield node    
+        for node in self.preorder():
+            yield node
 
     def keys(self):
-        for node in self.preorder():                       
-            yield node._key   
+        for node in self.preorder():
+            yield node._key
 
     def counts(self):
-        for node in self.preorder():                       
-            yield node._count              
+        for node in self.preorder():
+            yield node._count
 
     def children(self, node):
         for child in node._children.keys():
@@ -47,14 +50,14 @@ class Tree():
 
     def preorder(self):
         if not self.is_empty():
-            for node in self._subtree_preorder(self._root): 
+            for node in self._subtree_preorder(self._root):
                 yield node
 
     def _subtree_preorder(self, node):
-        yield node                                           
-        for c in node._children.values():                       
-            for other in self._subtree_preorder(c):      
-                yield other                  
+        yield node
+        for c in node._children.values():
+            for other in self._subtree_preorder(c):
+                yield other
 
 
 #----------------------------------- Below are CanTree codes -------------------------------
@@ -64,7 +67,7 @@ class Tree():
 class CanTree(Tree):
     def __init__(self):
         super().__init__()
-        self.route = {}
+        self.headerTable = {}
         self.last_in_route = {}
 
     #-------------------------- nonpublic mutators --------------------------
@@ -109,17 +112,17 @@ class CanTree(Tree):
 
     #---------------------------- public methods ------------------------------
     # create a header table with a canonical order
-    def createRoute(self, dbItems):
+    def createHeaderTable(self, dbItems):
         temp = sorted(dbItems.items(), key=lambda x: x[0])
         for item in temp:
-            self.route[item[0]] = TreeNode()
-            self.last_in_route[item[0]] = self.route[item[0]]
+            self.headerTable[item[0]] = TreeNode()
+            self.last_in_route[item[0]] = self.headerTable[item[0]]
 
-    # find the first node in the linked list from the route
+    # find the first node in the linked list from the headerTable
     def find_first(self, key):
-        return self.route[key]
+        return self.headerTable[key]
 
-    # find the last node in the linked list from the route
+    # find the last node in the linked list from the headerTable
     def find_last(self, key):
         return self.last_in_route[key]
 
@@ -128,12 +131,19 @@ class CanTree(Tree):
 
     # Add one transaction or conditional pattern base
     def add(self, line, count):
-        f = open('insert.txt', 'a')
-        start = time()
-        self.insert(self._root, sorted(line), count) 
-        end = time()
-        f.write(str(end - start) + '\n')
-        f.close()
+        # if record:
+        #     f = open('insert.txt', 'a')
+        #     start = time()
+        if len(line) >= sys.getrecursionlimit():
+            sys.setrecursionlimit(len(line) + 10)
+            self.insert(self._root, sorted(line), count)
+            sys.setrecursionlimit(old_limit)
+        else:
+            self.insert(self._root, sorted(line), count)
+        # if record:
+        #     end = time()
+        #     f.write(str(end - start) + '\n')
+        #     f.close()
 
     # Get the prefix path which can be readily used added to the conditional pattern base
     def prefix_path(self, node):
@@ -146,7 +156,7 @@ class CanTree(Tree):
         if not path:
             return None
         path.reverse()
-        return (count, path) 
+        return (count, path)
 
     def __repr__(self):
         r = ''
@@ -169,6 +179,3 @@ class CanTree(Tree):
         # for node in self.iter_ll(key):
         #     r += node._count
         return r
-
-
-
