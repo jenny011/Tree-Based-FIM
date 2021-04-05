@@ -155,6 +155,8 @@ class FPTree(Tree):
     def __repr__(self):
         r = ''
         for i in self:
+            if i[0] == "40":
+                print(i[1])
             r += str(i) + ' '
         return r
 

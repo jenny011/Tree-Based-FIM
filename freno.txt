@@ -1,0 +1,10 @@
+total order
+for the every trx
+smallest: entry item = root node
+insert trx
+based on the minsup
+distribute: dht
+
+2nd path
+1. change minsup
+2. change distribution: split node

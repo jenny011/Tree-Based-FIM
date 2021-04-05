@@ -1,7 +1,7 @@
 '''FP-Growth'''
 import header as myHeader
 import tree as myTree
-from memory_profiler import memory_usage
+#from memory_profiler import memory_usage
 import sys
 
 #----------scan the db-----------
@@ -74,6 +74,7 @@ def mineAll(tree, basePtn):
 def main(db):
 	dbItems = getDBItems(db)
 	fpTree = buildFPTree(db, dbItems)
+	print(fpTree)
 	results = mineAll(fpTree, '')
 	return results
 
@@ -85,10 +86,12 @@ if __name__ == '__main__':
 	for num in range(int(args[1])):
 		num += 1
 		numStr = f'{num:02}'
-		f_mem = open(args[3] + numStr + ".txt", 'a')
-		for i in range(0, 50, 5):
-			minsup = i / 100 * len(db)
-			f_mem.write(str(i) + ",")
-			mem_usage = memory_usage((main, (db,), ), 1)
-			f_mem.write(str(mem_usage) + "\n\n")
-		f_mem.close()
+		#f_mem = open(args[3] + numStr + ".txt", 'a')
+		#for i in range(0, 50, 5):
+		minsup = 40 / 100 * len(db)
+		results = main(db)
+		print(results)
+			#f_mem.write(str(i) + ",")
+			#mem_usage = memory_usage((main, (db,), ), 1)
+			#f_mem.write(str(mem_usage) + "\n\n")
+		#f_mem.close()

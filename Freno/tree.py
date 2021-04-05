@@ -1,4 +1,45 @@
-# from time import time
+class Cache():
+    def __init__(self, size_limit=800):
+        self._cache = {}
+        self._min = ()
+        self._size = 0
+        self._size_limit = size_limit
+        self._n = 0
+
+    def __contains__(self, itemset):
+        return itemset in self._cache
+
+    def __getitem__(self, itemset):
+        return self._cache[itemset]
+
+    def add(self, itemset, count):
+        # assert(self._size < self._size_limit)
+        self._cache[itemset] = count
+        self._size += 1
+        if not self._min or count < self._min[1]:
+            self._min = (itemset, count)
+
+    def replace(self, itemset, count):
+        # self._n += 1
+        # assert(count > self._min[1])
+        ret = self._min
+        del self._cache[ret[0]]
+        self._cache[itemset] = count
+        self._min = (itemset, count)
+        return ret
+
+    def delete(self, itemset):
+        del self._cache[itemset]
+        self._size -= 1
+
+    def update(self, itemset, count):
+        self._cache[itemset] += count
+        if count < self._min[1]:
+            self._min = (itemset, count)
+
+    def full(self):
+        return self._size >=  self._size_limit
+
 
 '''tree'''
 #-------------------------- Tree Base -------------------
@@ -10,9 +51,9 @@ class TreeNode():
         self._parent = parent
         self._count = count
         self._children = {}
-        self._freq_combs = set()
-        self._freq_items = set()
+        self._comb_cache = Cache()
         self._comb_table = {}
+        self._item_cache = Cache()
         self._item_table = {}
 
     def addChild(self, node):
@@ -24,8 +65,6 @@ class Tree():
         self._root = TreeNode()
         self._size = 0
         self.minsup = minsup
-        self._n = 0
-        self._hit = 0
 
     #-------------------------- public accessors -------------------
     def size(self):
@@ -38,6 +77,38 @@ class Tree():
     def __iter__(self):
         for node in self.preorder():
             yield node
+
+    def __repr__(self):
+        ret = []
+        for node in self.preorder():
+            if node._count >= self.minsup:
+                ret.append(node._key)
+        return str(ret)
+
+    def exp_results(self):
+        ret = []
+        s1 = 0
+        s2 = 0
+        icache = 0
+        itable = 0
+        ccache = 0
+        ctable = 0
+        n1 = 0
+        n2 = 0
+        for node in self.preorder():
+            s1 += node._item_cache._n
+            icache += node._item_cache._size
+            itable += len(node._item_table)
+            if node._item_cache.full():
+                n1 += 1
+                # print("item", node._key)
+            s2 += node._comb_cache._n
+            ccache += node._comb_cache._size
+            ctable += len(node._comb_table)
+            if node._comb_cache.full():
+                n2 += 1
+                print("comb", node._key, len(node._comb_table))
+        return f'Cache eviction: item - {s1}, comb - {s2}\nItem: cache - {icache}, table - {itable}\nComb: cache - {ccache}, table - {ctable}\nTable used: item - {n1}, comb - {n2}'
 
     def nodes(self):
         for node in self.preorder():
@@ -97,23 +168,69 @@ class Tree():
     def _recordInfo(self, node, comb, count=1, exist=True):
         # record pattern
         combStr = (",").join(comb)
-        # if the combination is already frequent, do nothing
-        if combStr in node._freq_combs:
-            return
-        node._comb_table[combStr] = node._comb_table.get(combStr, 0) + count
+        # if comb in cache
+        if combStr in node._comb_cache:
+            node._comb_cache.update(combStr, count)
+        #if comb not in cache
+        elif node._comb_cache.full():
+            new_count = node._comb_table.get(combStr, 0) + count
+            # if count > cache min, replace
+            if node._comb_cache._min[1] < new_count:
+                ret_comb = node._comb_cache.replace(combStr, new_count)
+                # put evicted comb in table
+                node._comb_table[ret_comb[0]] = ret_comb[1]
+            else:
+                node._comb_table[combStr] = new_count
+        else:
+            node._comb_cache.add(combStr, count)
         # record item
         for item in comb:
-            if item not in node._freq_items:
-                node._item_table[item] = node._item_table.get(item, 0) + count
+            node._item_table[item] = node._item_table.get(item, 0) + count
+            # if item in node._item_cache:
+            #     node._item_cache.update(item, count)
+            # elif node._item_cache.full():
+            #     new_count = node._item_table.get(item, 0) + count
+            #     if node._item_cache._min[1] < new_count:
+            #         ret_item = node._item_cache.replace(item, new_count)
+            #         node._item_table[ret_item[0]] = ret_item[1]
+            #     else:
+            #         node._item_table[item] = new_count
+            # else:
+            #     node._item_cache.add(item, count)
         # breadth first
-        # potential optimization?
         for item in comb:
-            # item just became frequent
-            if item not in node._freq_items and node._item_table[item] >= self.minsup:
+            # if item in node._item_cache:
+            #     if node._item_cache[item] >= self.minsup:
+            #         # add node
+            #         newNode = self._addNode(node, node._key + "," + item, node._item_cache[item])
+            #         # transfer patterns to newNode
+            #         for key in node._comb_cache:
+            #             ptn = key.split(",")
+            #             if item in ptn:
+            #                 i = ptn.index(item)
+            #                 if i < len(ptn) - 1:
+            #                     suffix = ptn[i + 1:]
+            #                     self._recordInfo(newNode, suffix, node._comb_cache[key], exist=False)
+            #         for key in node._comb_table:
+            #             ptn = key.split(",")
+            #             if item in ptn:
+            #                 i = ptn.index(item)
+            #                 if i < len(ptn) - 1:
+            #                     suffix = ptn[i + 1:]
+            #                     self._recordInfo(newNode, suffix, node._comb_table[key], exist=False)
+            # else:
+            if node._item_table[item] >= self.minsup:
                 # add node
                 newNode = self._addNode(node, node._key + "," + item, node._item_table[item])
                 # transfer patterns to newNode
-                for key in list(node._comb_table.keys()):
+                for key in node._comb_cache._cache:
+                    ptn = key.split(",")
+                    if item in ptn:
+                        i = ptn.index(item)
+                        if i < len(ptn) - 1:
+                            suffix = ptn[i + 1:]
+                            self._recordInfo(newNode, suffix, node._comb_cache[key], exist=False)
+                for key in node._comb_table:
                     ptn = key.split(",")
                     if item in ptn:
                         i = ptn.index(item)
@@ -122,10 +239,8 @@ class Tree():
                             self._recordInfo(newNode, suffix, node._comb_table[key], exist=False)
                     # the whole combination becomes frequent
                     if node._comb_table[key] >= self.minsup:
-                        node._freq_combs.add(key)
                         del node._comb_table[key]
-                node._freq_items.add(item)
-                del node._item_table[item]
+                # del node._item_table[item]
 
     def insertAndRecord(self, node, comb):
         # not root
@@ -140,6 +255,6 @@ class Tree():
 
     def insert(self, node, trx):
         for i in range(len(trx)):
-            if trx[i] not in node._children.keys():
+            if trx[i] not in node._children:
                 newNode = self._addNode(node, trx[i])
             self.insertAndRecord(node._children[trx[i]], trx[i+1:])
