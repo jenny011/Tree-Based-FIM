@@ -22,7 +22,7 @@ if __name__ == '__main__':
 		numStr = f'{num:02}'
 		f_perf = open(args[3] + numStr + ".txt", 'a')
 		f_result = open(args[4] + numStr + ".txt", 'a')
-		for i in range(0, 50, 5):
+		for i in range(1, 51, 5):
 			minsup = i / 100 * len(db)
 			f_perf.write(str(i) + ",")
 			start = time()
