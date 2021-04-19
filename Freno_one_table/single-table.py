@@ -41,8 +41,8 @@ class TreeNode():
 
 
 class Tree():
-	def __init__(self, minsup, database={}):
-		self._database = database
+	def __init__(self, minsup, db={}):
+		self._db = db
 		self._root = TreeNode()
 		self._size = 0
 		self.minsup = minsup
@@ -103,7 +103,7 @@ class Tree():
 	def _recordAccess(self, node):
 		node._count += 1
 
-	def _recordInfo(self, node, comb, index, count=1):
+	def _recordInfo(self, node, comb, count=1):
 		combStr = (",").join(comb)
 		for item in comb:
 			node._item_table[item] = node._item_table.get(item, 0) + count
@@ -113,56 +113,29 @@ class Tree():
 				# add node
 				newNode = self._addNode(node, node._key + "," + item, node._item_table[item])
 				# transfer patterns to newNode
-				for ptn in db[:index+1]:
+				for ptn in self._db:
 					i = isSubSequence(node._key.split(",") + [item], ptn)
 					if i:
 						if i < len(ptn) - 1:
 							suffix = ptn[i + 1:]
-							self._recordInfo(newNode, suffix, index)
+							self._recordInfo(newNode, suffix)
 
 
-	def insertAndRecord(self, node, comb, index):
+	def insertAndRecord(self, node, comb):
 		# not root
 		self._recordAccess(node)
 		# reached the end
 		if not comb:
 			return
-		self._recordInfo(node, comb, index)
+		self._recordInfo(node, comb)
 		for i in range(len(comb)):
 			if node._key + "," + comb[i] in node._children:
-				self.insertAndRecord(node._children[node._key + "," + comb[i]], comb[i+1:], index)
+				self.insertAndRecord(node._children[node._key + "," + comb[i]], comb[i+1:])
 
-	def insert(self, node, trx, index):
+	def insert(self, node, trx):
 		for i in range(len(trx)):
 			if trx[i] not in node._children:
 				newNode = self._addNode(node, trx[i])
-			self.insertAndRecord(node._children[trx[i]], trx[i+1:], index)
+			self.insertAndRecord(node._children[trx[i]], trx[i+1:])
 
 
-
-if __name__ == '__main__':
-	args = sys.argv
-	db = scanDB(args[2], ' ')
-	for num in range(int(args[1])):
-		num += 1
-		numStr = f'{num:02}'
-		f_perf = open(args[3] + numStr + ".txt", 'a')
-		f_result = open(args[4] + numStr + ".txt", 'a')
-		for i in range(1, 51, 5):
-			minsup = i / 100 * len(db)
-			# print(minsup, len(db))
-			f_perf.write(str(i) + ",")
-			start = time()
-			FrenoTree = Tree(minsup)
-			for i in range(len(db)):
-				trx = db[i]
-				trx.sort()
-				FrenoTree.insert(FrenoTree._root, trx, i)
-			end = time()
-			# print(end-start)
-			# print(FrenoTree)
-			f_perf.write(str(end - start) + "\n\n")
-			f_result.write(str(i) + "\n")
-			f_result.write(str(FrenoTree) + "\n\n")
-		f_perf.close()
-		f_result.close()
