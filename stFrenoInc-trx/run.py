@@ -1,7 +1,8 @@
 '''FRENO'''
 from time import time
 import sys
-import csv
+import csv, json
+import numpy as np
 
 def scanDB(path, separator):
 	db = []
@@ -94,6 +95,13 @@ class Tree():
 				ret.append(str(item._key))
 		return str(sorted(ret))
 
+	def toList(self):
+		ret = []
+		for item in self:
+			if item._count >= self.minsup:
+				ret.append(str(item._key))
+		return sorted(ret)
+
 	def _addNode(self, parent, value, count=0):
 		newNode = TreeNode(value, parent, count)
 		parent.addChild(newNode)
@@ -147,22 +155,34 @@ if __name__ == '__main__':
 		num += 1
 		numStr = f'{num:02}'
 		f_perf = open(args[3] + numStr + ".txt", 'a')
-		f_result = open(args[4] + numStr + ".txt", 'a')
+		result = {}
 		for i in range(1, 51, 5):
 			minsup = i / 100 * len(db)
 			# print(minsup, len(db))
 			f_perf.write(str(i) + ",")
-			start = time()
 			FrenoTree = Tree(minsup)
-			for i in range(len(db)):
-				trx = db[i]
+			for j in range(50000):
+				trx = db[j]
 				trx.sort()
-				FrenoTree.insert(FrenoTree._root, trx, i)
-			end = time()
+				FrenoTree.insert(FrenoTree._root, trx, j)
+
+			# incremental
+			times = []
+			for j in range(50000, 51000):
+				start = time()
+				trx = db[j]
+				trx.sort()
+				FrenoTree.insert(FrenoTree._root, trx, j)
+				end = time()
+				times.append(end-start)
+
+			mean_time = np.mean(times)
+			err_time = np.std(times)
 			# print(end-start)
 			# print(FrenoTree)
-			f_perf.write(str(end - start) + "\n\n")
-			f_result.write(str(i) + "\n")
-			f_result.write(str(FrenoTree) + "\n\n")
+			f_perf.write(str(mean_time) + "," + str(err_time) + "\n\n")
+
+			result[i] = FrenoTree.toList()
 		f_perf.close()
-		f_result.close()
+		with open(args[4] + numStr + ".json", "w") as f_result:
+			json.dump(result, f_result)
