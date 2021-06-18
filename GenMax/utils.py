@@ -73,3 +73,19 @@ def transposeDB(hdb):
 			else:
 				vdb[item] = {i}
 	return vdb
+
+
+def isSubSequence(itemset, trx):
+    i = 0
+    for j in range(len(trx)):
+        if itemset[i] == trx[j]:
+            i += 1
+        if i >= len(itemset):
+            return j
+    return False
+
+def isSubSet(itemset, mfi):
+    for item in itemset:
+        if item not in mfi:
+            return False
+    return True
