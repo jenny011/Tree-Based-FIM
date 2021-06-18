@@ -21,21 +21,23 @@ def isSubSet(itemset, mfi):
 def countItemset(itemset):
     sup = 0
     for trx in db:
-        if isSubSequence(itemset, trx):
+        if isSubSet(itemset, trx):
             sup += 1
     return sup
 
+def ascOrderedList(fmap):
+    flist = sorted(fmap, key=fmap.get)
+    return flist
 
-# fiBackTrace([], dbItems, 0, minsup)
+
 # the extension after each c constructs the possible set of the c
-def fiBackTrack(itemset, combineSet, index, res):
+def fiBackTrack(itemset, combineSet):
     for c in combineSet:
         newItemset = itemset + [c]
-        res.append(newItemset)
-        newPossibleSet = [x for x in combineSet if x > c]
+        res.append(",".join(newItemset))
+        newPossibleSet = combineSet[combineSet.index(c)+1 : ]
         newCombineSet = fiCombine(newItemset, newPossibleSet)
-        fiBackTrack(newItemset, newCombineSet, index + 1, res)
-    return res
+        fiBackTrack(newItemset, newCombineSet)
 
 # the frequent itemset extensions constructs the new combine set
 def fiCombine(itemset, possibleSet):
@@ -46,22 +48,39 @@ def fiCombine(itemset, possibleSet):
             combineSet.append(p)
     return combineSet
 
-# mfiBackTrace([], dbItems, 0, minsup)
-def mfiBackTrack(itemset, combineSet, index):
+def fiCombineOrdered(itemset, possibleSet):
+    combineSetDict = {}
+    for p in possibleSet:
+        temp = itemset + [p]
+        count = countItemset(temp)
+        if count >= minsup:
+            combineSetDict[p] = count
+    combineSet = ascOrderedList(combineSetDict)
+    return combineSet
+
+# Generate Maximal FIs
+def mfiBackTrack(itemset, combineSet):
     for c in combineSet:
         newItemset = itemset + [c]
-        newPossibleSet = [x for x in combineSet if x > c]
-        for i in mfi:
-            if isSubSet(newItemset + newPossibleSet, i):
-                return
-        newCombineSet = fiCombine(newItemset, newPossibleSet)
+        newPossibleSet = combineSet[combineSet.index(c)+1 : ]
+        next = False
+        i = 0
+        while i < len(mfis):
+            if isSubSet(newItemset + newPossibleSet, mfis[i]):
+                next = True
+                break
+            i += 1
+        if next:
+            continue
+        newCombineSet = fiCombineOrdered(newItemset, newPossibleSet)
         if not newCombineSet:
-            for j in mfi:
-                if isSubSet(newItemset, j):
+            while i < len(mfis):
+                if isSubSet(newItemset, mfis[i]):
                     break
-            mfi.add(newItemset)
+                i += 1
+            mfis.append(newItemset)
         else:
-            mfiBackTrack(newItemset, newCombineSet, index + 1)
+            mfiBackTrack(newItemset, newCombineSet)
 
 
 if __name__ == "__main__":
@@ -76,13 +95,21 @@ if __name__ == "__main__":
 
     db = get_DB(args.dbdir, args.db)
     db_size = len(db)
-    dbItems = getDBItems(db)
-
     minsup = int(args.minsup) / 100 * db_size
 
-    vdb = transposeDB(db)
-    f = [k for k, v in dbItems.items() if v >= minsup]
+    freqDBItems = getFreqDBItems(db, minsup)
+    freqDBItemList = list(freqDBItems.keys())
+    f = ascOrderedList(freqDBItems)
 
-    mfis = {}
-    res = fiBackTrack([], f, 0, [])
-    print(">>>", res)
+    # vdb = transposeDB(db)
+
+    #----------GenMax----------
+    #FI-backtrack
+    # res = []
+    # fiBackTrack([], freqDBItemList)
+    # print("FI>", res)
+
+    # MFI-backtrack
+    mfis = []
+    mfiBackTrack([], f)
+    print("MFI>", mfis)
