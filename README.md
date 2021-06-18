@@ -13,5 +13,13 @@ Its tree-building phase is similar to FP-Growth. <br>
 It deals with incremental database updates by storing all the frequent and infrequent itemsets in its CanTree following a canonical order. <br>
 CanTree can be mined using existing FP-Growth-like mining algorithms.
 
+## Eclat
+Centralized non-incremental algorithm. <br>
+Vertical database <br>
+Lattice search space <br>
+
 ## Freno
 A primitive design of an incremental algorithm that is suitable for distributed computing.
+
+## stFreno
+Freno with only one big table instead of combination tables.
