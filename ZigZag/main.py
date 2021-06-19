@@ -3,6 +3,7 @@ import json, csv
 from time import time
 from utils import *
 from objects import *
+import numpy as np
 
 
 if __name__ == "__main__":
@@ -17,29 +18,29 @@ if __name__ == "__main__":
 
     totalDB = get_DB(args.dbdir, args.db)
     db_size = len(totalDB)
-    minsup = int(args.minsup) / 100 * db_size
-    split = 0.4
+    minsup = float(args.minsup) / 100 * db_size
+    base_split = 0.8
 
-    inc_split = int(db_size * split)
+    inc_split = 78162
+    # inc_split = int(db_size * base_split)
+    inc_number = 5
+    granularity = 2000
+    assert(inc_number * granularity <= db_size - inc_split)
+
     baseDB = totalDB[:inc_split]
-
     zigzag = ZigZag(minsup, baseDB)
+    zigzag.prep()
     zigzag.run()
     zigzag.updateRetainedFIs()
 
-    incDB = totalDB[inc_split:]
-    s = time()
-    zigzag.update_incDB(incDB, inc_split)
-    zigzag.runInc()
-    e = time()
-    print(e-s)
-    zigzag.updateRetainedFIs()
+    for i in range(inc_number):
+        incDB = totalDB[inc_split + granularity * i : inc_split + granularity * (i+1)]
+        zigzag.update_incDB(incDB, inc_split)
+        zigzag.runInc()
+        zigzag.updateRetainedFIs()
+    # print(len(zigzag.l), np.mean(zigzag.l), np.std(zigzag.l))
+    # print(len(zigzag.incl), np.mean(zigzag.incl), np.std(zigzag.incl))
 
-    # incDB = totalDB[inc_split + int(db_size * 0.2):]
-    # zigzag.update_incDB(incDB, inc_split + int(db_size * 0.2))
-    # zigzag.runInc()
-    # print(zigzag.mfis)
-    # zigzag.updateRetainedFIs()
 
 
 # ------------------------------------------------------------------

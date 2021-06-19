@@ -3,6 +3,10 @@ import json, csv
 from time import time
 from utils import *
 
+
+### save all partial or save freq?
+### diffset/bitmap?
+
 class GenMax:
     def __init__(self, minsup, db):
         self.minsup = minsup
@@ -10,7 +14,10 @@ class GenMax:
         self.mfis = []
         self.vdb = {}
         self.flist = []
+        self.l = []
+        self.incl = []
 
+    # Optimize
     def get_tlist(self, itemset):
         for i in range(1, len(itemset)):
             temp = ",".join(itemset[:i])
@@ -47,9 +54,11 @@ class GenMax:
         combineSet = ascOrderedList(combineSetDict)
         return combineSet
 
-    def run(self):
+    def prep(self):
         self.transposeDB()
         self.getFlist()
+
+    def run(self):
         self.backTrack([], self.flist, self.mfis)
 
     def backTrack(self, itemset, combineSet, mfis):
@@ -94,6 +103,7 @@ class ZigZag(GenMax):
         self.vIncDB = {}
         self.retained = {}
 
+    # Optimize
     def get_tlistInc(self, itemset):
         if ",".join(itemset) not in self.vIncDB:
             if len(itemset) == 1:
@@ -101,8 +111,9 @@ class ZigZag(GenMax):
             for i in range(1, len(itemset)):
                 temp = ",".join(itemset[:i])
                 if ",".join(itemset[:i+1]) not in self.vIncDB:
-                    self.vIncDB[",".join(itemset[:i+1])] = self.vIncDB[temp].intersection(self.vIncDB.get(itemset[i], set()))
+                    self.vIncDB[",".join(itemset[:i+1])] = self.vIncDB.get(temp, set()).intersection(self.vIncDB.get(itemset[i], set()))
 
+    # Optimize
     def support(self, itemsetStr, inc=False):
         itemset = itemsetStr.split(",")
         if inc:
@@ -137,8 +148,9 @@ class ZigZag(GenMax):
 
     def countItemsetVerticalInc(self, itemset, p):
         if p in self.vIncDB:
+            itemsetStr = ",".join(sorted(itemset))
             self.get_tlistInc(sorted(itemset))
-            new_tlist = self.vIncDB[",".join(sorted(itemset))].intersection(self.vIncDB[p])
+            new_tlist = self.vIncDB[itemsetStr].intersection(self.vIncDB[p])
             newItemset = ",".join(sorted(itemset + [p]))
             self.vIncDB[newItemset] = new_tlist
             return len(new_tlist)
