@@ -1,5 +1,6 @@
 import sys, os, argparse
 import json, csv
+from itertools import combinations
 
 def get_DB(DBDIR, dbname):
     if dbname == "retail":
@@ -22,15 +23,14 @@ def get_DB(DBDIR, dbname):
         DBFILENAME = "transData.txt"
     return scanDB(os.path.join(DBDIR, DBFILENAME), " ")
 
-def scanDB(path, delimiter):
-	db = []
-	f = open(path, 'r')
-	for line in f:
-		if line:
-			trx = line.rstrip().split(delimiter)
-			db.append(sorted(trx))
-	f.close()
-	return db
+def scanDB(fpath, delimiter):
+    db = []
+    with open(fpath, 'r') as f:
+        for line in f:
+            if line:
+                trx = line.rstrip().split(delimiter)
+                db.append(trx)
+    return db
 
 def getDBItems(db):
 	dbItems = {}
@@ -40,15 +40,41 @@ def getDBItems(db):
 	return dbItems
 
 def getFreqDBItems(db, minsup):
-    dbItems = {}
-    for trx in db:
-        for item in trx:
-            dbItems[item] = dbItems.get(item, 0) + 1
+    dbItems = getDBItems(db)
     ret = {}
     for k, v in dbItems.items():
         if v >= minsup:
             ret[k] = v
     return ret
+
+def transposeDB(hdb, base=0):
+	vdb = {}
+	for i in range(len(hdb)):
+		for item in hdb[i]:
+			if item in vdb:
+				vdb[item].add(i + base)
+			else:
+				vdb[item] = {i + base}
+	return vdb
+
+def mypowerset(l):
+    if len(l) == 0:
+        return {''}
+    s = mypowerset(l[1:])
+    t = set()
+    for item in s:
+        if item:
+            temp = item.split(",") + [l[0]]
+            temp.sort()
+            t.add(",".join(temp))
+        else:
+            t.add(l[0])
+    s = s.union(t)
+    return s
+
+def ascOrderedList(fmap):
+    flist = sorted(fmap, key=fmap.get)
+    return flist
 
 def verticalDB(path, delimiter):
 	vdb = {}
@@ -64,28 +90,22 @@ def verticalDB(path, delimiter):
 				i += 1
 	return vdb, i
 
-def transposeDB(hdb):
-	vdb = {}
-	for i in range(len(hdb)):
-		for item in hdb[i]:
-			if item in vdb:
-				vdb[item].add(i)
-			else:
-				vdb[item] = {i}
-	return vdb
+def powerset(l):
+    ret = set()
+    for i in range(len(l)+1):
+        comb = set()
+        for element in combinations(l,i):
+            temp = ",".join(sorted(element))
+            if temp:
+                comb.add(temp)
+        ret = ret.union(comb)
+    return ret
 
-
-def isSubSequence(itemset, trx):
-    i = 0
-    for j in range(len(trx)):
-        if itemset[i] == trx[j]:
-            i += 1
-        if i >= len(itemset):
-            return j
-    return False
-
-def isSubSet(itemset, mfi):
-    for item in itemset:
-        if item not in mfi:
-            return False
-    return True
+def generateFIsave(mfis):
+    fi = set()
+    for mfi in mfis:
+        fi = fi.union(powerset(mfi))
+    res = set()
+    for item in fi:
+        res.add(",".join(sorted(item.split(","))))
+    return sorted(list(res))

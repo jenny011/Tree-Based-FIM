@@ -2,61 +2,7 @@ import sys, os, argparse
 import json, csv
 from time import time
 from utils import *
-
-
-def isNotSubSetPosition(itemset, mfi):
-    p = -1
-    for i in range(len(itemset)):
-        if itemset[i] not in mfi:
-            if i > p:
-                p = i
-    return p
-
-def ascOrderedList(fmap):
-    flist = sorted(fmap, key=fmap.get)
-    return flist
-
-def countItemsetVertical(itemset, p):
-    new_tlist = vdb[",".join(itemset)].intersection(vdb[p])
-    vdb[",".join(itemset + [p])] = new_tlist
-    return len(new_tlist)
-
-
-def fiCombineOrdered(itemset, possibleSet):
-    combineSetDict = {}
-    for p in possibleSet:
-        count = countItemsetVertical(itemset, p)
-        if count >= minsup:
-            combineSetDict[p] = count
-    combineSet = ascOrderedList(combineSetDict)
-    return combineSet
-
-
-def lmfiBackTrack(itemset, combineSet, lmfi):
-    for c in combineSet:
-        newItemset = itemset + [c]
-        newPossibleSet = combineSet[combineSet.index(c)+1 : ]
-        next = False
-        p = -1
-        for i in range(len(lmfi)):
-            new_p = isNotSubSetPosition(newItemset + newPossibleSet, lmfi[i])
-            if new_p == -1:
-                next = True
-            elif new_p > p:
-                p = new_p
-        if next:
-            continue
-        new_lmfi = []
-        newCombineSet = fiCombineOrdered(newItemset, newPossibleSet)
-        if not newCombineSet:
-            if len(newItemset) >= p:
-                lmfi.append(newItemset)
-        else:
-            new_lmfi = [mfi for mfi in lmfi if c in mfi]
-            lmfiBackTrack(newItemset, newCombineSet, new_lmfi)
-        for mfi in new_lmfi:
-            if mfi not in lmfi:
-                lmfi.append(mfi)
+from objects import *
 
 
 if __name__ == "__main__":
@@ -69,16 +15,81 @@ if __name__ == "__main__":
     # parser.add_argument('--result', '-r', help='result output', required=True)
     args = parser.parse_args()
 
-    db = get_DB(args.dbdir, args.db)
-    db_size = len(db)
+    totalDB = get_DB(args.dbdir, args.db)
+    db_size = len(totalDB)
     minsup = int(args.minsup) / 100 * db_size
+    split = 0.4
 
-    freqDBItems = getFreqDBItems(db, minsup)
-    f = ascOrderedList(freqDBItems)
+    inc_split = int(db_size * split)
+    baseDB = totalDB[:inc_split]
 
-    vdb = transposeDB(db)
+    zigzag = ZigZag(minsup, baseDB)
+    zigzag.run()
+    zigzag.updateRetainedFIs()
 
-    # LMFI-backtrack
-    mfis = []
-    lmfiBackTrack([], f, mfis)
-    print("LMFI>", mfis)
+    incDB = totalDB[inc_split:]
+    s = time()
+    zigzag.update_incDB(incDB, inc_split)
+    zigzag.runInc()
+    e = time()
+    print(e-s)
+    zigzag.updateRetainedFIs()
+
+    # incDB = totalDB[inc_split + int(db_size * 0.2):]
+    # zigzag.update_incDB(incDB, inc_split + int(db_size * 0.2))
+    # zigzag.runInc()
+    # print(zigzag.mfis)
+    # zigzag.updateRetainedFIs()
+
+
+# ------------------------------------------------------------------
+# -----------------------------Draft--------------------------------
+# ------------------------------------------------------------------
+
+    # ----------GenMax----------
+    # freqDBItems = getFreqDBItems(baseDB, minsup)
+    # freqDBItemList = list(freqDBItems.keys())
+    # f = ascOrderedList(freqDBItems)
+    # vdb = transposeDB(baseDB)
+    # itemset_support = {}
+    # for k, v in vdb.items():
+    #     itemset_support[k] = len(v)
+    # ---call---
+    # mfis = []
+    # s = time()
+    # mfiBackTrack([], f, mfis, minsup, vdb, [])
+    # e = time()
+    # print(e-s)
+    # print(mfis)
+    # --- gen FI ---
+    # fis = set()
+    # for mfi in mfis:
+    #     fis = fis.union(mypowerset(mfi))
+    # fis.discard('')
+    # --- count FI---
+    # retained = {}
+    # for fi in fis:
+    #     if fi in retained:
+    #         retained[fi] = len(vdb[fi])
+    #     else:
+    #         retained[fi] = countItemset(fi, vdb)
+    #
+    #
+    # #------- Inc: D+ only, no D- -------
+    # scan inc db
+    # incDB = db[inc_split:]
+    # vIncDB = transposeDB(incDB, inc_split)
+    # # update db and support
+    # newDB = baseDB + incDB
+    # inc_itemset_support = {}
+    # for k, v in vIncDB.items():
+    #     vdb[k] = vdb.get(k,set()).union(v)
+    #     # inc_itemset_support[k] = len(v)
+    #     # itemset_support[k] = itemset_support.get(k, 0) + len(v)
+    #
+    # # freq items in new db
+    # newFreqDBItems = getFreqDBItems(newDB, minsup)
+    # newF = ascOrderedList(newFreqDBItems)
+    #
+    # mfiBackTrack([], newF, mfis, minsup, vdb, vIncDB, retained)
+    # print(mfis)

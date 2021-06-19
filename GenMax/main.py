@@ -2,12 +2,13 @@ import sys, os, argparse
 import json, csv
 from time import time
 from utils import *
+import numpy as np
 
 
 def isNotSubSetPosition(itemset, mfi):
     for i in range(len(itemset)):
         if itemset[i] not in mfi:
-            return i
+            return i + 1
     return -1
 
 def ascOrderedList(fmap):
@@ -38,10 +39,11 @@ def countItemsetDiff(itemset, p, index):
 
     newItemsetStr = ",".join(itemset + [p])
     diffSet = set1.difference(set2)
-    sup = itemset_support[itemsetStr] - len(diffSet)
+    itemset_count = itemset_support[itemsetStr]
+    sup = itemset_count - len(diffSet)
     diff[newItemsetStr] = diffSet
     itemset_support[newItemsetStr] = sup
-    return sup
+    return sup, itemset_count
 
 
 # the frequent itemset extensions constructs the new combine set
@@ -74,7 +76,7 @@ def fiCombineOrdered(itemset, possibleSet):
 def fiCombineOrdDiff(itemset, possibleSet, index):
     combineSetDict = {}
     for p in possibleSet:
-        count = countItemsetDiff(itemset, p, index)
+        count, itemset_count = countItemsetDiff(itemset, p, index)
         if count >= minsup:
             combineSetDict[p] = count
     combineSet = ascOrderedList(combineSetDict)
@@ -94,7 +96,7 @@ def mfiBackTrack(itemset, combineSet):
             elif new_p > p:
                 p = new_p
         if next:
-            continue
+            return
         newCombineSet = fiCombineOrdered(newItemset, newPossibleSet)
         if not newCombineSet:
             if len(newItemset) >= p:
@@ -116,9 +118,9 @@ def lmfiBackTrack(itemset, combineSet, lmfi, index):
             elif new_p > p:
                 p = new_p
         if next:
-            continue
+            return
         new_lmfi = []
-        newCombineSet = fiCombineOrdDiff(newItemset, newPossibleSet, index)
+        newCombineSet = fiCombineOrdered(newItemset, newPossibleSet)
         if not newCombineSet:
             if len(newItemset) >= p:
                 lmfi.append(newItemset)
@@ -169,14 +171,17 @@ if __name__ == "__main__":
     # print("FI>", res)
 
     # MFI-backtrack
-    # mfis = []
-    # mfiBackTrack([], f)
-    # print("MFI>", mfis)
+    mfis = []
+    mfiBackTrack([], f)
+    print("MFI>", mfis)
 
     # LMFI-backtrack
     lmfi = []
     diff = {}
+    s = time()
     lmfiBackTrack([], f, lmfi, 0)
-    # print("LMFI>", lmfi)
-    res = generateFI(lmfi)
-    print(res)
+    e = time()
+    print(e-s)
+    print("LMFI>", lmfi)
+    # res = generateFI(lmfi)
+    # print(res)
