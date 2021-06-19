@@ -5,12 +5,10 @@ from utils import *
 
 
 def isNotSubSetPosition(itemset, mfi):
-    p = -1
     for i in range(len(itemset)):
         if itemset[i] not in mfi:
-            if i > p:
-                p = i
-    return p
+            return i
+    return -1
 
 def ascOrderedList(fmap):
     flist = sorted(fmap, key=fmap.get)
@@ -28,6 +26,22 @@ def countItemsetVertical(itemset, p):
     new_tlist = vdb[",".join(itemset)].intersection(vdb[p])
     vdb[",".join(itemset + [p])] = new_tlist
     return len(new_tlist)
+
+def countItemsetDiff(itemset, p, index):
+    itemsetStr = ",".join(itemset)
+    if index == 0:
+        set1 = vdb[itemsetStr]
+        set2 = vdb[p]
+    else:
+        set1 = diff[",".join(itemset[:-1] + [p])]
+        set2 = diff[itemsetStr]
+
+    newItemsetStr = ",".join(itemset + [p])
+    diffSet = set1.difference(set2)
+    sup = itemset_support[itemsetStr] - len(diffSet)
+    diff[newItemsetStr] = diffSet
+    itemset_support[newItemsetStr] = sup
+    return sup
 
 
 # the frequent itemset extensions constructs the new combine set
@@ -57,6 +71,15 @@ def fiCombineOrdered(itemset, possibleSet):
     combineSet = ascOrderedList(combineSetDict)
     return combineSet
 
+def fiCombineOrdDiff(itemset, possibleSet, index):
+    combineSetDict = {}
+    for p in possibleSet:
+        count = countItemsetDiff(itemset, p, index)
+        if count >= minsup:
+            combineSetDict[p] = count
+    combineSet = ascOrderedList(combineSetDict)
+    return combineSet
+
 # Generate Maximal FIs
 def mfiBackTrack(itemset, combineSet):
     for c in combineSet:
@@ -80,7 +103,7 @@ def mfiBackTrack(itemset, combineSet):
             mfiBackTrack(newItemset, newCombineSet)
 
 
-def lmfiBackTrack(itemset, combineSet, lmfi):
+def lmfiBackTrack(itemset, combineSet, lmfi, index):
     for c in combineSet:
         newItemset = itemset + [c]
         newPossibleSet = combineSet[combineSet.index(c)+1 : ]
@@ -95,16 +118,25 @@ def lmfiBackTrack(itemset, combineSet, lmfi):
         if next:
             continue
         new_lmfi = []
-        newCombineSet = fiCombineOrdered(newItemset, newPossibleSet)
+        newCombineSet = fiCombineOrdDiff(newItemset, newPossibleSet, index)
         if not newCombineSet:
             if len(newItemset) >= p:
                 lmfi.append(newItemset)
         else:
             new_lmfi = [mfi for mfi in lmfi if c in mfi]
-            lmfiBackTrack(newItemset, newCombineSet, new_lmfi)
+            lmfiBackTrack(newItemset, newCombineSet, new_lmfi, index + 1)
         for mfi in new_lmfi:
             if mfi not in lmfi:
                 lmfi.append(mfi)
+
+def generateFI(mfis):
+    fi = set()
+    for mfi in mfis:
+        fi = fi.union(powerset(mfi))
+    res = set()
+    for item in fi:
+        res.add(",".join(sorted(item.split(","))))
+    return sorted(list(res))
 
 
 if __name__ == "__main__":
@@ -126,6 +158,9 @@ if __name__ == "__main__":
     f = ascOrderedList(freqDBItems)
 
     vdb = transposeDB(db)
+    itemset_support = {}
+    for k, v in vdb.items():
+        itemset_support[k] = len(v)
 
     #----------GenMax----------
     # FI-backtrack
@@ -135,10 +170,13 @@ if __name__ == "__main__":
 
     # MFI-backtrack
     # mfis = []
-    # mfiBackTrack([], f, vdb)
+    # mfiBackTrack([], f)
     # print("MFI>", mfis)
 
     # LMFI-backtrack
     lmfi = []
-    lmfiBackTrack([], f, lmfi)
-    print("LMFI>", lmfi)
+    diff = {}
+    lmfiBackTrack([], f, lmfi, 0)
+    # print("LMFI>", lmfi)
+    res = generateFI(lmfi)
+    print(res)

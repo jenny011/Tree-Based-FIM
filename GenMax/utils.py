@@ -1,5 +1,6 @@
 import sys, os, argparse
 import json, csv
+from itertools import combinations
 
 def get_DB(DBDIR, dbname):
     if dbname == "retail":
@@ -89,3 +90,23 @@ def isSubSet(itemset, mfi):
         if item not in mfi:
             return False
     return True
+
+# def powerset(s):
+#     ret = []
+#     x = len(s)
+#     for i in range(1 << x):
+#         l = [s[j] for j in range(x) if (i & (1 << j))]
+#         if l:
+#             ret.append(",".join(l))
+#     return ret
+
+def powerset(l):
+    ret = set()
+    for i in range(len(l)+1):
+        comb = set()
+        for element in combinations(l,i):
+            temp = ",".join(sorted(element))
+            if temp:
+                comb.add(temp)
+        ret = ret.union(comb)
+    return ret
