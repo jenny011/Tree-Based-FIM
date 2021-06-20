@@ -6,9 +6,9 @@ def get_DB(DBDIR, dbname):
     if dbname == "retail":
         DBFILENAME = "retail.txt"
     elif dbname == "kosarak":
-        DBFILENAME = "kosarak.dat"
+        DBFILENAME = "kosarak.txt"
     elif dbname == "chainstore":
-        DBFILENAME = "chainstore.txt"
+        DBFILENAME = "chainstoreFIM.txt"
     elif dbname == "susy":
         DBFILENAME = "SUSY.txt"
     elif dbname == "record":
@@ -75,6 +75,16 @@ def mypowerset(l):
 def ascOrderedList(fmap):
     flist = sorted(fmap, key=fmap.get)
     return flist
+
+def insertInOrder(l, x):
+    if l[0] > x:
+        return [x] + l
+
+    for i in range(len(l)-1):
+        if l[i] < x and l[i+1] > x:
+            return l[:i+1] + [x] + l[i+1:]
+
+    return l + [x]
 
 def verticalDB(path, delimiter):
 	vdb = {}

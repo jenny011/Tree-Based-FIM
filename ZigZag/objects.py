@@ -5,7 +5,7 @@ from utils import *
 
 
 ### save all partial or save freq?
-### diffset/bitmap?
+### diffset
 
 class GenMax:
     def __init__(self, minsup, db):
@@ -14,14 +14,15 @@ class GenMax:
         self.mfis = []
         self.vdb = {}
         self.flist = []
-        self.l = []
-        self.incl = []
 
     # Optimize
     def get_tlist(self, itemset):
-        for i in range(1, len(itemset)):
-            temp = ",".join(itemset[:i])
-            self.vdb[",".join(itemset[:i+1])] = self.vdb[temp].intersection(self.vdb[itemset[i]])
+        if ",".join(itemset) not in self.vdb:
+            for i in range(1, len(itemset)):
+                temp = ",".join(itemset[:i])
+                next = ",".join(itemset[:i+1])
+                if next not in self.vdb:
+                    self.vdb[next] = self.vdb[temp].intersection(self.vdb[itemset[i]])
 
     def transposeDB(self):
         self.vdb = transposeDB(self.db)
@@ -36,21 +37,24 @@ class GenMax:
                 return i + 1
         return -1
 
-    def countItemsetVertical(self, itemset, p):
-        itemsetStr = ",".join(sorted(itemset))
-        if itemsetStr not in self.vdb:
-            self.get_tlist(sorted(itemset))
+    def countItemsetVertical(self, itemset, itemsetStr, p):
+        self.get_tlist(itemset)
         new_tlist = self.vdb[itemsetStr].intersection(self.vdb[p])
-        newItemset = ",".join(sorted(itemset + [p]))
-        self.vdb[newItemset] = new_tlist
+
+        newItemsetStr = ",".join(sorted(itemset + [p]))
+        self.vdb[newItemsetStr] = new_tlist
         return len(new_tlist)
 
     def fiCombineOrd(self, itemset, possibleSet):
+        sortedItemset = sorted(itemset)
+        itemsetStr = ",".join(sortedItemset)
+
         combineSetDict = {}
         for p in possibleSet:
-            count = self.countItemsetVertical(itemset, p)
+            count = self.countItemsetVertical(sortedItemset, itemsetStr, p)
+            
             if count >= self.minsup:
-                combineSetDict[p] = count / (len(self.vdb[",".join(sorted(itemset))]) * len(self.vdb[p]))
+                combineSetDict[p] = count / (len(self.vdb[itemsetStr]) * len(self.vdb[p]))
         combineSet = ascOrderedList(combineSetDict)
         return combineSet
 
@@ -106,12 +110,13 @@ class ZigZag(GenMax):
     # Optimize
     def get_tlistInc(self, itemset):
         if ",".join(itemset) not in self.vIncDB:
-            if len(itemset) == 1:
+            if len(itemset) == 1 or itemset[0] not in self.vIncDB:
                 self.vIncDB[itemset[0]] = set()
             for i in range(1, len(itemset)):
                 temp = ",".join(itemset[:i])
-                if ",".join(itemset[:i+1]) not in self.vIncDB:
-                    self.vIncDB[",".join(itemset[:i+1])] = self.vIncDB.get(temp, set()).intersection(self.vIncDB.get(itemset[i], set()))
+                next = ",".join(itemset[:i+1])
+                if next not in self.vIncDB:
+                    self.vIncDB[next] = self.vIncDB[temp].intersection(self.vIncDB.get(itemset[i], set()))
 
     # Optimize
     def support(self, itemsetStr, inc=False):
@@ -146,26 +151,29 @@ class ZigZag(GenMax):
         self.transposeDBInc()
         self.mergeDB()
 
-    def countItemsetVerticalInc(self, itemset, p):
+    def countItemsetVerticalInc(self, itemset, itemsetStr, p, newItemsetStr):
         if p in self.vIncDB:
-            itemsetStr = ",".join(sorted(itemset))
-            self.get_tlistInc(sorted(itemset))
+            self.get_tlistInc(itemset)
             new_tlist = self.vIncDB[itemsetStr].intersection(self.vIncDB[p])
-            newItemset = ",".join(sorted(itemset + [p]))
-            self.vIncDB[newItemset] = new_tlist
+
+            self.vIncDB[newItemsetStr] = new_tlist
             return len(new_tlist)
+
         return 0
 
     def fiCombineOrdInc(self, itemset, possibleSet):
+        sortedItemset = sorted(itemset)
+        itemsetStr = ",".join(sortedItemset)
+
         combineSetDict = {}
         for p in possibleSet:
-            newItemsetStr =  ",".join(itemset + [p])
+            newItemsetStr =  ",".join(sorted(itemset + [p]))
             if newItemsetStr in self.retained:
-                count = self.retained[newItemsetStr] + self.countItemsetVerticalInc(itemset, p)
+                count = self.retained[newItemsetStr] + self.countItemsetVerticalInc(sortedItemset, itemsetStr, p, newItemsetStr)
             else:
-                count = self.countItemsetVertical(itemset, p)
+                count = self.countItemsetVertical(sortedItemset, itemsetStr, p)
+
             if count >= self.minsup:
-                itemsetStr = ",".join(sorted(itemset))
                 combineSetDict[p] = count / (self.support(itemsetStr) * len(self.vdb[p]))
         combineSet = ascOrderedList(combineSetDict)
         return combineSet
