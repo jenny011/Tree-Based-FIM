@@ -23,7 +23,7 @@ class Tree():
         self._root = TreeNode()
         self._size = 0
         self.minsup = minsup
-        self._times = []
+        # self._times = []
 
     #-------------------------- public accessors -------------------
     def size(self):
@@ -104,8 +104,8 @@ class Tree():
                             suffix = ptn[i + 1:]
                             self._recordInfo(newNode, suffix, node._comb_table[key], exist=False)
                     # moved the whole combination to the child
-                    if node._comb_table[key] >= self.minsup:
-                        del node._comb_table[key]
+                    # if node._comb_table[key] >= self.minsup:
+                    #     del node._comb_table[key]
 
     def insertAndRecord(self, node, comb):
         # not root
